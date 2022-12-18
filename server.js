@@ -72,3 +72,164 @@ const addEmployee = async () => {
     });
 };
 
+const addDepartment = async () => {
+  await prompt([
+    {
+      type: "input",
+      message: "What is the name of the department?",
+      name: "department_name",
+    },
+  ]).then(function (answers) {
+    db.query(`INSERT INTO department SET ?`, {
+      department_name: answers.department_name,
+    });
+    console.log("--- Department Added ---");
+    mainMenu();
+  });
+};
+
+const addRole = async () => {
+  const [department] = await db.query(`SELECT * FROM department`);
+  const departmentList = department.map((eachDepartment) => {
+    return {
+      department_name: eachDepartment.department_name,
+      value: eachDepartment.id,
+    };
+  });
+  await prompt([
+    {
+      type: "input",
+      message: "What is the title of the role?",
+      name: "role",
+    },
+    {
+      type: "input",
+      message: "What is the salary of the role?",
+      name: "salary",
+    },
+    {
+      type: "list",
+      message: "What department will they be in?",
+      name: "role_department",
+      choices: departmentList,
+    },
+  ]).then(function (answers) {
+    db.query(`INSERT INTO role SET ?`, {
+      title: answers.role,
+      salary: answers.salary,
+      department_id: answers.role_department,
+    });
+    console.log("--- Role Added ---");
+    mainMenu();
+  });
+};
+
+const updateEmployee = async () => {
+  const [roles] = await db.query(`SELECT * FROM role`);
+  const roleList = roles.map((eachRole) => {
+    return { name: eachRole.title, value: eachRole.id };
+  });
+  const [employees] = await db.query(`SELECT * FROM employee`);
+  const employeeList = employees.map((eachEmployee) => {
+    return {
+      name: eachEmployee.first_name + " " + eachEmployee.last_name,
+      value: eachEmployee.id,
+    };
+  });
+  await prompt([
+    {
+      type: "list",
+      message: "Who would you like to update?",
+      name: "employee_name",
+      choices: employeeList,
+    },
+    {
+      type: "list",
+      message: "What role would you like to update them to?",
+      name: "employee_role",
+      choices: roleList,
+    },
+  ]).then(function (answers) {
+    db.query(`UPDATE employee SET role_id = ? WHERE id = ?`, [
+      answers.employee_role,
+      answers.employee_name,
+    ]);
+    console.log("--- Employee Updated ---");
+    mainMenu();
+  });
+};
+
+const mainMenu = async () => {
+  const { choice } = await prompt([
+    {
+      type: "list",
+      name: "choice",
+      message: "What would you like to do?",
+      choices: [
+        {
+          name: "View All Employees",
+          value: "VIEW_EMPLOYEES",
+        },
+        {
+          name: "Add Employee",
+          value: "ADD_EMPLOYEE",
+        },
+        {
+          name: "Update Employee Role",
+          value: "UPDATE_EMPLOYEE",
+        },
+        {
+          name: "View All Departments",
+          value: "VIEW_DEPARTMENTS",
+        },
+        {
+          name: "View All Roles",
+          value: "VIEW_ROLES",
+        },
+        {
+          name: "Add a Department",
+          value: "ADD_DEPARTMENT",
+        },
+        {
+          name: "Add a Role",
+          value: "ADD_ROLE",
+        },
+        {
+          name: "Exit",
+          value: "EXIT",
+        },
+      ],
+    },
+  ]);
+
+  switch (choice) {
+    case "VIEW_EMPLOYEES":
+      viewEmployees();
+      break;
+    case "VIEW_DEPARTMENTS":
+      viewDepartments();
+      break;
+    case "VIEW_ROLES":
+      viewRoles();
+      break;
+    case "ADD_EMPLOYEE":
+      addEmployee();
+      break;
+    case "UPDATE_EMPLOYEE":
+      updateEmployee();
+      break;
+    case "ADD_DEPARTMENT":
+      addDepartment();
+      break;
+    case "ADD_ROLE":
+      addRole();
+    case "EXIT":
+      process.exit();
+      break;
+    default:
+      process.exit();
+  }
+};
+
+mainMenu();
+
