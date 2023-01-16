@@ -1,4 +1,4 @@
-use employee_db;
+use employees;
 
 INSERT INTO department
     (department_name)
@@ -9,7 +9,7 @@ VALUES
     ('SEO'),
     ('HR');
 
-INSERT INTO role
+INSERT INTO role_id
     (title, salary, department_id)
 VALUES
     ('Project Manager', 80000, 1),
